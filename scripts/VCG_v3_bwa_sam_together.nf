@@ -1,12 +1,12 @@
 #!/usr/bin/env nextflow
 
-// ------------------------------------------------------------
-// FIXED - switched from of seqera container to github container with both 
-// bwa and samtools to improve code efficiency
-// CHANGE - hard coded values in your processess (eg the quality score threshold
-// in ivar consensus). Change these to params (similar to what you've done for
-// ref_fast, bed_file, etc).
-// ------------------------------------------------------------
+/* ------------------------------------------------------------
+ FIXED - switched from of seqera container to github container with both 
+ bwa and samtools to improve code efficiency
+ CHANGE - hard coded values in your processess (eg the quality score threshold
+ in ivar consensus). Change these to params (similar to what you've done for
+ ref_fast, bed_file, etc).
+*/
 
 // Enable Nextflow DSL2 syntax
 nextflow.enable.dsl=2

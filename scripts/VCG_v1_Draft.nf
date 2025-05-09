@@ -1,12 +1,12 @@
 #!/usr/bin/env nextflow
 
-// ------------------------------------------------------------
-// FIXED - hardcoded paths to relative paths
-// NOTE - used quay.io instead of seqera containers
-// NOTE - bwa-mem2 and samtools used in the same process
-// FIXED - originally the bwa-mem2 was bwa (this was my mistake)
-// CHANGE - decompress reads can be done in the same process as alignment
-// ------------------------------------------------------------
+/*
+ FIXED - hardcoded paths to relative paths
+ NOTE - used quay.io instead of seqera containers
+ NOTE - bwa-mem2 and samtools used in the same process
+ FIXED - originally the bwa-mem2 was bwa (this was my mistake)
+ CHANGE - decompress reads can be done in the same process as alignment
+*/
 
 nextflow.enable.dsl=2
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env nextflow
 
-// ------------------------------------------------------------
-// NOTE - switched from quay.io instead of seqera containers
-// NOTE - bwa-mem2 and samtools had to be separated as not in same seqera container 
-// FIXED - decompressed reads now in the same process as alignment
-// ------------------------------------------------------------
+/* ------------------------------------------------------------
+ NOTE - switched from quay.io instead of seqera containers
+ NOTE - bwa-mem2 and samtools had to be separated as not in same seqera container 
+ FIXED - decompressed reads now in the same process as alignment
+*/
 
 // Enable Nextflow DSL2 syntax
 nextflow.enable.dsl=2
