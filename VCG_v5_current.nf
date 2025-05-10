@@ -18,6 +18,7 @@ params.ref_fasta = "${workflow.projectDir}/data/nCoV-2019.reference.fasta"
 params.bed_file  = "${workflow.projectDir}/data/nCoV-2019.bed"
 params.out_dir   = "${workflow.projectDir}/results"
 
+
 params.ivar_min_qual    = 20
 params.ivar_min_depth   = 30
 params.ivar_freq_thresh = 0.6
