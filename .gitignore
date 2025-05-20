@@ -3,5 +3,4 @@ data/fastq
 work
 .nextflow
 results
-test.nf
-testing1.nf
+

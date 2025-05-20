@@ -1,7 +1,8 @@
 #!/usr/bin/env nextflow
 
 /*
- * NOTES: 
+ * NOTES: need to figure out how to add samtools flagstat in process 1. 
+ latest update: updated with Check Coverage process 
  */
 
 nextflow.enable.dsl = 2 // Enable Nextflow DSL2 syntax
@@ -10,9 +11,11 @@ nextflow.enable.dsl = 2 // Enable Nextflow DSL2 syntax
 params.ref_fasta          = "${workflow.projectDir}/data/nCoV-2019.reference.fasta"
 params.out_dir            = "${workflow.projectDir}/results"
 
-params.ivar_min_qual      = 20
-params.ivar_min_depth     = 30
-params.ivar_freq_thresh   = 0.6
+params.ivar_min_qual      = 20  //-q
+params.ivar_min_depth     = 30  //-m
+params.ivar_freq_thresh   = 0.6 //-t
+
+
 
 /*
  * Main workflow definition
@@ -27,13 +30,19 @@ workflow {
     // Workflow execution
     ALIGN_AND_SORT(read_pairs) // Process 1: Align reads using BWA-MEM2 & Convert SAM to sorted BAM using SAMtools
         .set { sorted_bams }
+    
 
     bed_channel = Channel.fromPath('data/nCoV-2019.bed')
 
     TRIM_IVAR(sorted_bams.combine(bed_channel)) // Process 2: Trim primers from BAM files using iVar and BED file
         .set { trimmed_bams }
 
-    CONSENSUS_IVAR(trimmed_bams) // Process 3: Generate consensus genome from trimmed BAM using iVar
+    CHECK_COVERAGE(trimmed_bams) // Process 3:
+        .set{coverage_reports}
+
+    ref_file = Channel.fromPath('data/nCoV-2019.reference.fasta')
+
+    CONSENSUS_IVAR(trimmed_bams.combine(ref_file)) // Process 4: Generate consensus genome from trimmed BAM using iVar
         .set{consensus_fasta}
     
 }
@@ -42,7 +51,7 @@ workflow {
 process ALIGN_AND_SORT {
     
     tag "$sample_id" // Tags each job with sample ID for easier tracking
-
+    
     container = 'ghcr.io/tgen/containers/bwa_mem2_samtools:2.2.1-23080315' // Use container with both BWA-MEM2 and SAMtools
 
     input:
@@ -54,6 +63,8 @@ process ALIGN_AND_SORT {
     // Decompress the gzipped FASTQ files
     // Index the reference genome (needed for BWA)
     // Perform alignment and pipe directly to SAMtools for BAM conversion and sorting
+    // LAST line along with the modified output for this process gives me a file for each sorted.bam file tell me how well they are aligned to the reference. You can find these in the work folder. 
+    
     script:
     """
     zcat ${reads[0]} > ${sample_id}_1.fastq
@@ -75,18 +86,40 @@ process TRIM_IVAR {
     tuple val(sample_id), file(bam), file(bed_file) // Input sorted BAM combined to the Bed_file
 
     output:
-    tuple val(sample_id), file("${sample_id}.trimmed.bam") // Output trimmed BAM
+    tuple val(sample_id), file("${sample_id}.trimmed.sorted.bam")  // Output trimmed BAM
 
     // Index the BAM file
     // Trim primer sequences using BED coordinates
+    
     script:
     """
     samtools index ${bam}
     ivar trim -i ${bam} -b ${bed_file} -p ${sample_id}.trimmed -m ${params.ivar_min_depth}
+    
+    samtools sort -o ${sample_id}.trimmed.sorted.bam ${sample_id}.trimmed.bam
     """
 }
 
-// Process 3: Generate consensus using iVar
+// Process 3: 
+process CHECK_COVERAGE {
+    tag "$sample_id"
+    publishDir "${params.out_dir}/coverage", mode: 'copy'
+    
+    input:
+    tuple val(sample_id), file(trimmed_bam) // Input trimmed BAM file
+
+    output:
+    tuple val(sample_id), file("${sample_id}.coverage.txt") // Coverage report output
+    
+    // Run samtools depth on the sorted BAM file
+    script:
+    """
+    samtools depth ${sample_id}.trimmed.sorted.bam > ${sample_id}.coverage.txt
+    """
+}
+
+
+// Process 4: Generate consensus using iVar
 process CONSENSUS_IVAR {
     tag "$sample_id"
 
@@ -95,20 +128,17 @@ process CONSENSUS_IVAR {
     container = 'community.wave.seqera.io/library/ivar:1.4.4--89c11d667b4e27d1'
 
     input:
-    tuple val(sample_id), file(trimmed_bam) // Input BAM after trimming
+    tuple val(sample_id), file(trimmed_bam), file(ref_file) // Input trimmed BAM after trimming and coverage report
 
     output:
     file("${sample_id}.consensus.fasta") // Final consensus FASTA
 
-    // Generate pileup and create consensus sequence
-    // Rename output file for clarity
     script:
-    """
-    samtools mpileup -A -d 0 --reference ${params.ref_fasta} ${trimmed_bam} | \
-        ivar consensus -p ${sample_id}.consensus -q ${params.ivar_min_qual} -t ${params.ivar_freq_thresh} -m ${params.ivar_min_depth}
+    """    
+    samtools mpileup -A -d 0 --reference ${ref_file} ${trimmed_bam} | \
+        ivar consensus -p ${sample_id}.consensus -q ${params.ivar_min_qual} -t ${params.ivar_freq_thresh} -m ${params.ivar_min_depth} > ${sample_id}.consensus.fa
     
-    mv ${sample_id}.consensus.fa ${sample_id}.consensus.fasta 
+    mv ${sample_id}.consensus.fa ${sample_id}.consensus.fasta
     """
 }
-
 
