@@ -1,37 +1,69 @@
-Nextflow Viral Consensus Genome Pipeline
+# 🧬 Nextflow Viral Consensus Genome Pipeline 
 
-This pipeline is designed to process viral sequencing data, from raw paired-end FASTQ files to a consensus genome using tools such as BWA, iVar, and Samtools. It demonstrates an automated workflow with Nextflow, starting from sequence alignment to primer trimming and final consensus generation. This process can be particularly useful for analyzing viral tiled amplicon sequencing data.
+This Nextflow pipeline processes raw viral tiled amplicon sequencing data (paired-end FASTQ) to generate a consensus genome using tools such as BWA-MEM2, Samtools, and iVar.
 
-Overview
-This Nextflow pipeline consists of the following steps:
+It automates the entire workflow—from read alignment to primer trimming and consensus generation—and is suitable for analyzing tiled amplicon sequencing data such as SARS-CoV-2.
 
-Download paired FASTQ files from NCBI (use #5 dataset from the benchmarking repository).
+## 📋 Overview
 
-Align the reads to the reference genome using BWA-MEM2 and sort the resulting BAM file using Samtools.
+The pipeline consists of the following steps:
 
-Trim primers from the aligned BAM file using iVar and a BED file for primer coordinates.
+1. Download raw paired-end FASTQ files
 
-Generate a consensus genome using iVar and output a FASTA file with the consensus sequence.
+- For benchmarking, you can use dataset #5 from the NCBI benchmarking repository.
 
-Prerequisites
-Before running the pipeline, make sure the following software and tools are available:
+2. Align reads to reference genome
 
-Nextflow: Nextflow Installation Guide
+- Using BWA-MEM2 for alignment
 
-Docker (for containerized execution of tools like BWA-MEM2, Samtools, and iVar): Docker Installation Guide
+- BAM file is sorted using Samtools
 
-Reference Files:
+3. Primer trimming
 
-Download the reference FASTA file from the NCBI or your preferred source.
+- Performed with iVar using a BED file containing primer coordinates
 
-Download the BED file that contains primer coordinates.
+4. Consensus genome generation
 
-Obtain raw paired-end FASTQ files (can be downloaded from NCBI or another source).
+- With iVar
 
-Troubleshooting and Notes
-Memory/CPU Requirements: Depending on your dataset size, you might need to adjust memory and CPU allocation for the processes. This can be done in your config file.
+- Output: consensus genome in FASTA format
 
-File Paths: Ensure that your file paths (for FASTQ, reference, and BED files) are correct and accessible by the pipeline.
+## 🛠️ Prerequisites
 
-License
-This pipeline is licensed under the MIT License.
+Before running the pipeline, ensure the following are installed:
+
+- Nextflow
+- Docker (used to containerize BWA-MEM2, Samtools, and iVar)
+
+Required Input Files (can be found in the data folder) or you can aquire them from your preferred source:
+
+- Reference genome in FASTA format
+- BED file with primer coordinates
+- Raw paired-end FASTQ files (_R1.fastq.gz and _R2.fastq.gz)
+
+## ⚠️ Notes & Troubleshooting
+Resource tuning: For large datasets, increase memory/CPU allocation in nextflow.config
+
+File paths: Make sure all input files and directories are correctly specified and accessible
+
+Docker: Ensure Docker is running before executing the pipeline
+
+## 📁 Directory Structure Example
+
+    project/
+    ├── data/
+    │   └── fastq/
+    │       ├── sample1_R1.fastq.gz
+    │       └── sample1_R2.fastq.gz
+    │   └── reference/
+    │       ├── nCoV-2019.reference.fasta
+    │       ├── sars-cov-2-nonvoivoc.tsv
+    │       └── nCoV-2019.bed
+    ├── results/
+    ├── README.md
+    ├── nextflow.config
+    ├── .gitignore
+    └── main.nf    
+
+## 📄 License
+This project is licensed under the MIT License.
